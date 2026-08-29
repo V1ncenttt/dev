@@ -30,7 +30,7 @@ Lay the project out per the default structure in §3.
     AGENTS.md     the system: roles, the doc web, the directory structure, the rules
     agents/       the six role definitions, symlinked into each project
 
-## The seven roles
+## The eight roles
 
 `coder` · `researcher` · `tech-lead` · `designer` build in their own workspaces
 and never move trunk. `integrator` works in the default workspace and is the only

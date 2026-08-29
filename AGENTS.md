@@ -38,12 +38,13 @@ That is the whole model. Full definitions are in `agents/`.
 | `researcher` | own workspace | `docs/research/` only; no production code | no |
 | `tech-lead` | own workspace | `docs/design/` only; never lands without human review | no |
 | `designer` | own workspace | UI, plus rendered before/after evidence | no |
+| `foreman` | own workspace, dispatches lanes | briefs and track state; little code | no |
 | `scribe` | the default workspace | `BOARD.md`, and rows in the other ops docs | no |
 | `integrator` | the default workspace | conflict resolutions only | **yes — sole authority** |
 | `patchbay` | the conversation | the board, the briefs | via `integrator` |
 
 **Why per-role and not per-task.** An agent roster is read once at session start,
-so a name invented for one task is always a session late. There are seven roles,
+so a name invented for one task is always a session late. There are eight roles,
 they are permanent, and they are always available.
 
 **The human is not one of the six.** He sets direction and priorities, reviews,
