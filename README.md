@@ -8,13 +8,40 @@ adopt it.
 
 ## Adopt it in a project
 
-    mkdir -p <project>/.claude
-    ln -sfn ~/projects/simply/dev/agents <project>/.claude/agents
-    ln -sfn ~/projects/simply/dev/AGENTS.md <project>/SYSTEM.md
+Run the installer:
 
-Gitignore `/SYSTEM.md` — the link target is an absolute machine-specific path, so
-committing it would hand a fresh clone a broken symlink. The project's own
-`AGENTS.md` carries the two commands above so a clone can recreate the link.
+    ~/projects/simply/dev/adopt.sh <project>
+
+It is idempotent and never overwrites anything that already exists. It
+symlinks `SYSTEM.md` and the role definitions, lays out the doc web of §3
+(ops skeletons, `docs/live/`, the human channel, `.workspaces/`,
+`.screenshots/progress/`), and appends the gitignore entries those need.
+
+**The role definitions go in the directory your coding harness reads them
+from — pick the one that matches the harness.** The script auto-detects
+(`--harness pi|claude|both` to override):
+
+    # Claude Code — agents from .claude/agents
+    # pi.dev — personas from .pi/agents
+    #   (also needs `projectPersonas: true` in ~/.pi/agent/subagents.json,
+    #    and the project must be trusted — pi prompts on launch)
+
+The links' targets are absolute machine-specific paths, so they are gitignored;
+the project's own `AGENTS.md` records the commands that recreate them (a fresh
+clone runs the installer again).
+
+Then give the project a root `AGENTS.md` that points at `@SYSTEM.md` — an
+in-repo path an agent can find and trust (Chris: *"it's going to be hard for
+random agents to read outside of repo"*) — and adds only what is true of that
+project —
+its gates, its crates, its paths, its doc filenames. Nothing a second project
+would also want belongs there; it belongs here.
+
+The role files are shared verbatim between harnesses, so their frontmatter must
+stay valid for every harness that reads them: **omit `tools`** (both harnesses
+then allow all tools — Claude Code by inheritance, pi because it has no
+allow-all token and treats a `tools:` list as literal names). Per-model or
+per-role tool restrictions are set by the harness config, not the role files.
 
 Then give the project a root `AGENTS.md` that points at `@SYSTEM.md` — an
 in-repo path an agent can find and trust (Chris: *"it's going to be hard for
@@ -28,7 +55,9 @@ Lay the project out per the default structure in §3.
 ## Layout
 
     AGENTS.md     the system: roles, the doc web, the directory structure, the rules
-    agents/       the six role definitions, symlinked into each project
+    adopt.sh      the installer: symlinks + doc-web skeleton + gitignore, idempotent
+    agents/       the eight role definitions, symlinked into each project
+                  (.claude/agents for Claude Code, .pi/agents for pi.dev)
 
 ## The eight roles
 

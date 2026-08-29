@@ -1,18 +1,30 @@
 # The working system
 
 A reusable way of running agent work on a repo. Nothing here is specific to one
-project. A project adopts it with a symlink and keeps only its own facts:
+project. A project adopts it with `adopt.sh` (idempotent: symlinks, doc-web
+skeleton, gitignore entries) or by hand — the role definitions go in the
+directory the coding harness in use reads them from (Claude Code:
+`.claude/agents`; pi.dev: `.pi/agents`):
 
+    # either: ./adopt.sh <project>
+
+    # or by hand — Claude Code
     mkdir -p <project>/.claude
     ln -sfn ~/projects/simply/dev/agents <project>/.claude/agents
+    # pi.dev (also needs `projectPersonas: true` in ~/.pi/agent/subagents.json
+    # and a trusted project)
+    mkdir -p <project>/.pi
+    ln -sfn ~/projects/simply/dev/agents <project>/.pi/agents
+
     ln -sfn ~/projects/simply/dev/AGENTS.md <project>/SYSTEM.md
 
 and a root `AGENTS.md` that points at `@SYSTEM.md`, then adds what is true of
 that project alone — its gates, its crates, its paths. The symlink exists
 because a brief naming a path outside the repo is one an agent has no reason to
 find or trust (Chris: *"it's going to be hard for random agents to read outside
-of repo"*); gitignore `/SYSTEM.md`, since its target is machine-specific, and let
-the project's `AGENTS.md` carry the commands that recreate it.
+of repo"*); gitignore `/SYSTEM.md` (and the harness directory if it isn't
+ignored already), since its target is machine-specific, and let the project's
+`AGENTS.md` carry the commands that recreate it.
 
 A project's root `AGENTS.md` plus this file are **the entry point for an empty
 context window**: between them they @mention the whole doc web, and loading them
@@ -267,10 +279,9 @@ lands it moves into the design document.
 How to do a thing — build, run, release, use a tool. Generated references say so
 and are **regenerated, not edited**. Historical material is archived rather than
 deleted.
-
 ### The human channel — gitignored
 
-A directory (for example `docs/simply-chris/`) for notes between the human and
+A directory (for example `docs/live/`) for notes between the human and
 the agents. **Gitignored, so that conversation never enters history.** This is
 what lets the board be line-items at all: the narrative has somewhere to go.
 
@@ -280,7 +291,6 @@ message (Chris, 2026-08-29: *"copy paste from Claude Code is terrible"*). **A
 block that names paths names them explicitly** — an *"everything except…"* filter
 is evaluated when the human runs it, in a world the agent could not see, which is
 how a cleanup deletes a lane started after it was written.
-
 ### Where they live
 
 Reshaped 2026-08-29 (Chris: *"where should the remaining top-level docs go?
@@ -300,6 +310,7 @@ Documentation lives in the docs tree, **never inside the source tree**.
 
     AGENTS.md                  points at this file, then this project's own facts
     .claude/agents ->          symlink to ~/projects/simply/dev/agents
+                               (Claude Code; pi.dev uses .pi/agents instead)
     docs/
       ops/                     BOARD.md CHANGELOG.md ISSUES.md IDEAS.md
                                ROADMAP.md DECISIONS.md
@@ -308,7 +319,7 @@ Documentation lives in the docs tree, **never inside the source tree**.
       guides/                  how-to
       reference/               generated — regenerate, don't edit
       archive/                 historical
-      <human-channel>/         gitignored notes and human-only commands
+      live/                    gitignored notes and human-only commands
     .workspaces/<lane>/        one per lane, gitignored, INSIDE the repo
     .screenshots/              gitignored
       reference/               captures of other software; never overwritten
