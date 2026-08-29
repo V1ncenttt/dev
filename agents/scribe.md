@@ -74,6 +74,7 @@ State in your report what you verified versus what you took on trust.
   saying a stage is in flight while the changelog says it landed is exactly what
   you exist to fix. Where the contradiction hides a real decision, say so and
   leave it for the human.
+- **Date every entry with a clock AND your change id** — `· 2026-08-29 20:15 · oplmqxmn`. The clock is for a human skimming; the change id is the ordering authority and lets the entry be checked against the tree. jj change ids survive rebase, so the one you have at commit time stays correct.
 - **Files what lanes found and did not fix.** A lane's report routinely contains
   follow-up work that never became a row. Turning that into rows is the highest
   value thing you do, because it is the work most likely to be lost.

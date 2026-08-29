@@ -169,6 +169,30 @@ reads as a narrative is in the wrong document.**
 
 **Not here**: work that has not landed; roadmap intent.
 
+### Dating an entry — clock *and* change id
+
+A date alone is not enough granularity. Thirteen lanes landed on one date in this
+project's history, and two changelog entries had to be reordered by hand because
+nothing in the text said which came first.
+
+Every `CHANGELOG.md` entry and every `DECISIONS.md` row carries **both**:
+
+    #### A preset that describes itself (`LIBFIN`) · 2026-08-29 20:15 · oplmqxmn
+    | 2026-08-29 20:15 · uvzmuvkl | **The analysis toolkit is a separate crate family…** |
+
+- **The clock** is for a human skimming: roughly when this happened. It is
+  written by the lane at commit time, because the lane is the only party that
+  knows, and it is *not* the ordering authority.
+- **The change id** is the ordering authority and the verification. Ancestry
+  answers "which landed first" exactly — with no ambiguity about *which* moment
+  a timestamp recorded, since authoring, rebasing and landing are often hours
+  apart. And `jj show <id>` produces the actual change, so a prose record can be
+  checked against the tree rather than drifting from it.
+
+**This works because jj change ids survive rebase.** A lane knows its id when it
+writes the entry, and the id is still valid after five rebases onto a moving
+trunk. A commit hash would not be; do not use one.
+
 ### `ISSUES.md`
 
 Defects and rough edges anyone notices in passing: file it, triage it, **DON'T

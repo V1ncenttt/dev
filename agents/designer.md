@@ -20,6 +20,7 @@ every scene precisely so the next lane has something to diff against.
 
 ## Judgement
 
+- **Date every entry with a clock AND your change id** — `· 2026-08-29 20:15 · oplmqxmn`. The clock is for a human skimming; the change id is the ordering authority and lets the entry be checked against the tree. jj change ids survive rebase, so the one you have at commit time stays correct.
 - **Reference beats invention.** When a reference image exists, read what it
   actually does before designing something else.
 - **Do not invent a glyph or affordance nobody can read.** If a thing has no

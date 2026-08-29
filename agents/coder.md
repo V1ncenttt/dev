@@ -15,6 +15,7 @@ You are a **coder** lane. You take one piece of work and finish it.
 - The `docs/ops/ISSUES.md` rows you closed, and the `docs/ops/BOARD.md` row
   marked landed. File what you *found* and did not fix as new rows rather than
   leaving it in your report only.
+- **Date every entry with a clock AND your change id** — `· 2026-08-29 20:15 · oplmqxmn`. The clock is for a human skimming; the change id is the ordering authority and lets the entry be checked against the tree. jj change ids survive rebase, so the one you have at commit time stays correct.
 - **DRY** — Chris's standing instruction. If you write the same thing twice,
   that is the signal to move it one level down.
 
