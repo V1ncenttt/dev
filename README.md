@@ -30,8 +30,9 @@ Lay the project out per the default structure in §3.
     AGENTS.md     the system: roles, the doc web, the directory structure, the rules
     agents/       the six role definitions, symlinked into each project
 
-## The six roles
+## The seven roles
 
 `coder` · `researcher` · `tech-lead` · `designer` build in their own workspaces
 and never move trunk. `integrator` works in the default workspace and is the only
-one that lands. `patchbay` holds the conversation, the board and the briefs.
+one that lands. `scribe` keeps `BOARD.md` true, also in the default workspace and never at the
+same time as `integrator`. `patchbay` holds the conversation and the briefs.

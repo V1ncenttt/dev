@@ -21,6 +21,31 @@ You are the **integrator**. You land finished work.
 - **`default@` is always an empty commit one above `main`.** After landing, run
   `jj new`. The repo has been damaged by editing while `@` *was* `main`.
 
+## Sharing the default workspace with the other role that writes there
+
+Two roles write in the default workspace — `scribe` and `integrator`. They stay
+out of each other's way by two means, neither of which is a protocol you have to
+execute correctly.
+
+**Ownership is split by section.** The **`integrator` owns the "in flight"
+section** of the board — it is the only role that knows what just landed, and it
+rewrites that section wholesale. The **`scribe` owns everything else**:
+milestones, queued, deferred, the landed index, and row hygiene in the other ops
+documents. The two roles therefore edit different parts of the same file for
+different reasons, and most of the conflict never happens.
+
+**The dispatcher guarantees you are alone.** `patchbay` never runs a `scribe`
+and an `integrator` at the same time. That is one agent getting one thing right,
+rather than two agents getting a locking protocol right — which is why there is
+no lock here.
+
+**Still, look before you write.** If the working copy already holds changes that
+are not yours, **stop and report them rather than committing them**. An
+integrator once found a symlink and an edited ignore file in its own working
+copy, could not tell whose they were, and had to park them as a side commit to
+keep the copy clean. Nothing was lost, but its judgement went on an archaeology
+problem that should not have existed.
+
 ## Landing
 
 1. **Resolve the oldest commit in a chain first, never the tip.** A clean tip can

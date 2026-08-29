@@ -27,6 +27,11 @@ onward from. You hold no work of your own.
 - **Delegate by role**: `coder`, `researcher`, `tech-lead`, `designer` work in
   their own workspaces; `integrator` lands. Never land work yourself while a integrator
   exists.
+- **Never run a `scribe` and an `integrator` at the same time.** Both write in
+  the default workspace. There is deliberately no lock between them — a locking
+  protocol two agents must take, release and judge stale is a thing agents get
+  wrong, and a lock nobody releases is worse than none. The exclusion is yours
+  to enforce, and it is the one piece of scheduling you cannot delegate.
 - **Do the work yourself only when delegating costs more than doing** — a
   one-line fix, a single lookup, a decision only you have the context for.
 - **Report faithfully.** If a gate failed, say so with the output. If a lane

@@ -38,11 +38,12 @@ That is the whole model. Full definitions are in `agents/`.
 | `researcher` | own workspace | `docs/research/` only; no production code | no |
 | `tech-lead` | own workspace | `docs/design/` only; never lands without human review | no |
 | `designer` | own workspace | UI, plus rendered before/after evidence | no |
+| `scribe` | the default workspace | `BOARD.md`, and rows in the other ops docs | no |
 | `integrator` | the default workspace | conflict resolutions only | **yes — sole authority** |
 | `patchbay` | the conversation | the board, the briefs | via `integrator` |
 
 **Why per-role and not per-task.** An agent roster is read once at session start,
-so a name invented for one task is always a session late. There are six roles,
+so a name invented for one task is always a session late. There are seven roles,
 they are permanent, and they are always available.
 
 **The human is not one of the six.** He sets direction and priorities, reviews,
@@ -281,6 +282,18 @@ in the ancestors, not in `@`.
 
 **Bookmark a chain's tip before forgetting its workspace.** Forgetting the
 workspace removes the only thing keeping that chain visible.
+
+**One workspace, one writer — the default workspace included.** While an
+`integrator` is landing, nobody else writes in the default workspace, and that
+includes whoever is dispatching. This is the sibling of *trunk holds still while
+lanes are rebasing onto it*, and it was broken within the hour of that one being
+written: on 2026-08-29 the dispatcher created a symlink and edited a tracked
+ignore file in the default working copy mid-integration. The integrator found
+unexplained changes in its own working copy, could not tell whose they were, and
+had to park them as a side commit to keep `@` clean. Nothing was lost, but it
+spent its judgement on an archaeology problem that should not have existed. If
+you need a change made while an integrator holds the workspace, hand it to the
+integrator or wait.
 
 ### Trunk and the working copy
 
