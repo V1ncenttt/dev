@@ -23,12 +23,17 @@ Two roles write in the default workspace — `scribe` and `integrator`. They sta
 out of each other's way by two means, neither of which is a protocol you have to
 execute correctly.
 
-**Ownership is split by section.** The **`integrator` owns the "in flight"
-section** of the board — it is the only role that knows what just landed, and it
-rewrites that section wholesale. The **`scribe` owns everything else**:
-milestones, queued, deferred, the landed index, and row hygiene in the other ops
-documents. The two roles therefore edit different parts of the same file for
-different reasons, and most of the conflict never happens.
+**Ownership is split by file, and one of them is gitignored.** You own the
+**live directory** (`docs/live/`, chiefly `STATUS.md`) — what is running, what is ready, where trunk is, what
+waits on the human — and because it is gitignored it does not dirty the working
+copy, so **you may rewrite it at any time, including while an integrator is
+mid-landing.** You also own the tracked board's slow half: milestones, queued,
+deferred, the landed index, and row hygiene in the other ops documents. The
+`integrator` writes only conflict resolutions. Nothing is co-owned.
+
+**Update the live status often and cheaply.** It costs nothing and it is the
+human's primary view; a board that is right within seconds is worth more than
+one that is beautiful within a batch.
 
 **The dispatcher guarantees you are alone.** `patchbay` never runs a `scribe`
 and an `integrator` at the same time. That is one agent getting one thing right,

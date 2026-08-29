@@ -96,8 +96,9 @@ the human's primary view of what is happening and what needs them.
 - **Line-items only.** Prose is what lanes collide on: when eight lanes each
   edited the same narrative paragraph, every one of them conflicted. Removing the
   prose took one board from 404 lines to 233 and the collisions stopped.
-- **The "in flight" section belongs to `integrator` alone.** Lanes take trunk's side
-  there rather than each rewriting it; the integrator rewrites it wholesale. A lane
+- **In-flight state does not live here at all** — it lives in the live file
+  above, which is why the `integrator` no longer owns a section of this
+  document and the `scribe` no longer waits for one. A lane
   never touches another lane's rows anywhere on the board.
 - **Keep it short.** It exists to show the *live* work, so a landed lane's row
   moves out of the queue and into the landed index the same day.
@@ -121,6 +122,36 @@ index; a superseded one is deleted and its successor says what it replaced.
 Status lives in the status column and in which section the row is in, never in
 the label (Chris, 2026-08-29: *"please don't use tildes in names, not sure why
 you're doing that, tildes are hard to type"*).
+
+### The live directory — untracked, and the churny half of the board
+
+The board splits in two, because its two halves have opposite needs.
+
+**`BOARD.md` is tracked and slow**: milestones, queued, deferred, the landed
+index. Every lane can read it in its own workspace and write its own row, and
+conflicts are rare once the prose is gone.
+
+**The live directory is gitignored and fast** (`docs/live/`, holding `STATUS.md`): what is running, what is ready and
+unintegrated, where trunk is, what is waiting on the human. It changes hourly.
+
+Prefer a gitignored **directory** over a gitignored file: one ignore entry, and
+room for whatever else turns out to want the same treatment.
+
+The reason for the split is not tidiness. Both a `scribe` and an `integrator`
+write in the default workspace and must not run at once, so while a long
+integration runs, board updates queue behind it — and that is exactly when most
+is changing and the human most wants to look. A **gitignored** file does not
+dirty the working copy at all, so the `scribe` can rewrite it *during* an
+integration. Splitting removes the contention rather than scheduling around it.
+
+The trade, stated plainly: **a gitignored file is invisible to lanes**, because
+each lane works in its own workspace directory. That is acceptable only because
+a lane gets its context from its brief, not from the board. Anything a lane
+must be able to read stays in the tracked half.
+
+**The tracked half must point at it.** A gitignored directory nobody references
+is undiscoverable — the board and the project's `AGENTS.md` both name it and say
+what lives there, even though neither can see its contents.
 
 ### `CHANGELOG.md`
 

@@ -27,12 +27,12 @@ Two roles write in the default workspace — `scribe` and `integrator`. They sta
 out of each other's way by two means, neither of which is a protocol you have to
 execute correctly.
 
-**Ownership is split by section.** The **`integrator` owns the "in flight"
-section** of the board — it is the only role that knows what just landed, and it
-rewrites that section wholesale. The **`scribe` owns everything else**:
-milestones, queued, deferred, the landed index, and row hygiene in the other ops
-documents. The two roles therefore edit different parts of the same file for
-different reasons, and most of the conflict never happens.
+**Ownership is split by file.** You write **conflict resolutions only**. The
+in-flight picture lives in a gitignored live directory the `scribe` owns and
+may rewrite at any time, including while you are landing — so you no longer own
+a section of the board, and the `scribe` no longer waits for you. When you land
+a chain, say so in your report; keeping the live status current is the scribe's
+job, not yours.
 
 **The dispatcher guarantees you are alone.** `patchbay` never runs a `scribe`
 and an `integrator` at the same time. That is one agent getting one thing right,
