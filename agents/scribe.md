@@ -23,7 +23,7 @@ out of each other's way by two means, neither of which is a protocol you have to
 execute correctly.
 
 **Ownership is split by file, and one of them is gitignored.** You own the
-**live directory** (`docs/live/`, chiefly `STATUS.md`) — what is running, what is ready, where trunk is, what
+**scratch directory** (`docs/scratch/`) — what is running, what is ready, where trunk is, what
 waits on the human — and because it is gitignored it does not dirty the working
 copy, so **you may rewrite it at any time, including while an integrator is
 mid-landing.** You also own the tracked board's slow half: milestones, queued,

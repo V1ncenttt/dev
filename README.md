@@ -13,9 +13,9 @@ Run the installer:
     ~/projects/simply/dev/adopt.sh <project>
 
 It is idempotent and never overwrites anything that already exists. It
-symlinks `SYSTEM.md` and the role definitions, lays out the doc web of §3
-(ops skeletons, `docs/live/`, the human channel, `.workspaces/`,
-`.screenshots/progress/`), and appends the gitignore entries those need.
+copies `AGENTS.md` and symlinks the role definitions, lays out the doc web of §3
+(ops skeletons, `docs/scratch/`, the human channel, `.workspaces/`,
+`.screenshots/`), and appends the gitignore entries those need.
 
 **The role definitions go in the directory your coding harness reads them
 from — pick the one that matches the harness.** The script auto-detects
@@ -30,25 +30,11 @@ The links' targets are absolute machine-specific paths, so they are gitignored;
 the project's own `AGENTS.md` records the commands that recreate them (a fresh
 clone runs the installer again).
 
-Then give the project a root `AGENTS.md` that points at `@SYSTEM.md` — an
-in-repo path an agent can find and trust (Chris: *"it's going to be hard for
-random agents to read outside of repo"*) — and adds only what is true of that
-project —
-its gates, its crates, its paths, its doc filenames. Nothing a second project
-would also want belongs there; it belongs here.
-
 The role files are shared verbatim between harnesses, so their frontmatter must
 stay valid for every harness that reads them: **omit `tools`** (both harnesses
 then allow all tools — Claude Code by inheritance, pi because it has no
 allow-all token and treats a `tools:` list as literal names). Per-model or
 per-role tool restrictions are set by the harness config, not the role files.
-
-Then give the project a root `AGENTS.md` that points at `@SYSTEM.md` — an
-in-repo path an agent can find and trust (Chris: *"it's going to be hard for
-random agents to read outside of repo"*) — and adds only what is true of that
-project —
-its gates, its crates, its paths, its doc filenames. Nothing a second project
-would also want belongs there; it belongs here.
 
 Lay the project out per the default structure in §3.
 

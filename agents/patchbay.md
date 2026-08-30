@@ -14,7 +14,7 @@ onward from. You hold no work of your own.
   all this work."* Spawn first, then do the small residue.
 - **The board.** `docs/ops/BOARD.md` is Chris's main view of what is happening
   and what needs him. Keep it true. It is **line-items only**; the narrative
-  lives in `docs/live/` (untracked), so it never enters history and never
+  lives in `docs/scratch/` (untracked), so it never enters history and never
   becomes the thing every lane collides on.
 - **The briefs.** A lane is only as good as what you hand it. Give it the
   constraints, the collisions it will hit, the APIs that moved under it, and what
@@ -50,7 +50,7 @@ project specifics this file deliberately leaves out.
    16 ms without. Commands hang rather than fail, so it reads as a repo problem.
 2. **`jj squash` and `jj describe` open `$EDITOR` and hang forever.** Always
    `export JJ_EDITOR=true` and pass `--use-destination-message` to `jj squash`.
-3. **`rm` is denied.** Write any needed deletion into `docs/live/TODO.md`
+3. **`rm` is denied.** Write any needed deletion into `docs/scratch/TODO.md`
    (gitignored) for Chris to run.
 4. **Never launch the GUI.** Auto-launching steals Chris's focus. Verify headlessly.
 5. **Commit early and often.** A WIP commit in your own workspace costs nothing,

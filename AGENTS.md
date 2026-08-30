@@ -8,31 +8,7 @@ directory the coding harness in use reads them from (Claude Code:
 
     # either: ./adopt.sh <project>
 
-    # or by hand — Claude Code
-    mkdir -p <project>/.claude
-    ln -sfn ~/projects/simply/dev/agents <project>/.claude/agents
-    # pi.dev (also needs `projectPersonas: true` in ~/.pi/agent/subagents.json
-    # and a trusted project)
-    mkdir -p <project>/.pi
-    ln -sfn ~/projects/simply/dev/agents <project>/.pi/agents
-
-    ln -sfn ~/projects/simply/dev/AGENTS.md <project>/SYSTEM.md
-
-and a root `AGENTS.md` that points at `@SYSTEM.md`, then adds what is true of
-that project alone — its gates, its crates, its paths. The symlink exists
-because a brief naming a path outside the repo is one an agent has no reason to
-find or trust (Chris: *"it's going to be hard for random agents to read outside
-of repo"*); gitignore `/SYSTEM.md` (and the harness directory if it isn't
-ignored already), since its target is machine-specific, and let the project's
-`AGENTS.md` carry the commands that recreate it.
-
-A project's root `AGENTS.md` plus this file are **the entry point for an empty
-context window**: between them they @mention the whole doc web, and loading them
-and following the mentions restores the working system. State lives on the board;
-these two files are the *system*. The project's copy sits in the repo root rather
-than under `docs/` because it is addressed to whoever — or whatever — is about to
-do work there, and that is the first thing they should find (Chris, 2026-08-29:
-*"docs/OPERATIONAL.md should really just be AGENTS.md in the root"*).
+This will create the necessary starter docs, copy over AGENTS.md and symlink the agents.
 
 Every rule below was paid for. Where a rule carries a date or a quote, that is
 the scar it came from; keep it, because a rule with a scar gets followed.
@@ -143,7 +119,7 @@ The board splits in two, because its two halves have opposite needs.
 index. Every lane can read it in its own workspace and write its own row, and
 conflicts are rare once the prose is gone.
 
-**The live directory is gitignored and fast** (`docs/live/`, holding `STATUS.md`): what is running, what is ready and
+**The scratch directory is gitignored and fast** (`docs/scratch/`, holding `STATUS.md`): what is running, what is ready and
 unintegrated, where trunk is, what is waiting on the human. It changes hourly.
 
 Prefer a gitignored **directory** over a gitignored file: one ignore entry, and
@@ -279,9 +255,11 @@ lands it moves into the design document.
 How to do a thing — build, run, release, use a tool. Generated references say so
 and are **regenerated, not edited**. Historical material is archived rather than
 deleted.
+
+
 ### The human channel — gitignored
 
-A directory (for example `docs/live/`) for notes between the human and
+A directory (for example `docs/scratch/`) for notes between the human and
 the agents. **Gitignored, so that conversation never enters history.** This is
 what lets the board be line-items at all: the narrative has somewhere to go.
 
@@ -291,6 +269,8 @@ message (Chris, 2026-08-29: *"copy paste from Claude Code is terrible"*). **A
 block that names paths names them explicitly** — an *"everything except…"* filter
 is evaluated when the human runs it, in a world the agent could not see, which is
 how a cleanup deletes a lane started after it was written.
+
+
 ### Where they live
 
 Reshaped 2026-08-29 (Chris: *"where should the remaining top-level docs go?
@@ -319,10 +299,9 @@ Documentation lives in the docs tree, **never inside the source tree**.
       guides/                  how-to
       reference/               generated — regenerate, don't edit
       archive/                 historical
-      live/                    gitignored notes and human-only commands
+      scratch/                 gitignored notes and human-only commands
     .workspaces/<lane>/        one per lane, gitignored, INSIDE the repo
     .screenshots/              gitignored
-      reference/               captures of other software; never overwritten
       progress/<date>-<LANE>/  what a lane renders; only scenes that CHANGED
       baseline/<date>/         the full set after an integration; keeps everything
 

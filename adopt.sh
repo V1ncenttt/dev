@@ -5,18 +5,18 @@
 # Does four things, all idempotent (safe to re-run; nothing existing is
 # overwritten):
 #
-#   1. symlinks SYSTEM.md        -> this repo's AGENTS.md
+#   1. copies AGENTS.md        -> this repo's AGENTS.md
 #   2. symlinks the role definitions into the directory the coding harness
 #      in use reads them from:
 #        pi.dev       .pi/agents       (personas; needs projectPersonas: true
 #                                       in ~/.pi/agent/subagents.json and a
 #                                       trusted project)
 #        Claude Code  .claude/agents   (subagents)
-#   3. lays out the doc web per SYSTEM.md §3:
+#   3. lays out the doc web per AGENTS.md §3:
 #        docs/ops/        BOARD CHANGELOG ISSUES IDEAS ROADMAP DECISIONS
 #        docs/{design,research,guides,reference,archive}/  (.gitkeep)
-#        docs/live/       STATUS.md   (gitignored)
-#        .workspaces/  .screenshots/progress/
+#        docs/scratch/       STATUS.md   (gitignored)
+#        .workspaces/  .screenshots/
 #   4. appends the gitignore entries the above need, to the project's
 #      .gitignore (created if absent). The symlink targets are machine-specific
 #      absolute paths, so they must never be committed.
@@ -69,19 +69,14 @@ ensure_dir() { mkdir -p -- "$1"; }
 # Ensure dir contains a .gitkeep so an empty tree survives in git.
 ensure_gitkeep() { ensure_dir "$1"; [ -e "$1/.gitkeep" ] || touch "$1/.gitkeep"; }
 
+# Ensure dir contains a .gitignore with wild card to ignore that directory.
+ensure_untracked_dir() { ensure_dir "$1"; [ -e "$1/.gitignore" ] || echo '*' > "$1/.gitignore"; }
+
 # Create a file with the given heredoc content only if it does not exist.
 ensure_file() { # <path>
 	local path="$1"
 	[ -e "$path" ] && return 0
 	cat > "$path"
-}
-
-# Append a gitignore line if it is not present (exact-line match).
-add_ignore() { # <project> <line>
-	local line="$2"
-	local gitignore="$1/.gitignore"
-	touch "$gitignore"
-	grep -qxF -- "$line" "$gitignore" || printf '%s\n' "$line" >> "$gitignore"
 }
 
 # Symlink, refreshing a stale link but never clobbering a real file/directory.
@@ -94,9 +89,19 @@ link_into() { # <target> <link-path>
 	ln -sfn -- "$target" "$link"
 }
 
-# --- 1. SYSTEM.md -------------------------------------------------------------
+# Copy a file
+copy_file() { <target> <copy-path>
+	local target="$1" copypath="$2"
+	if [ -e "$copypath" ]; then
+		echo "  !! exists, left alone: $link" >&2
+		return 0
+	fi
+	cp -- "target" "copypath"
+}
 
-link_into "$DEV_DIR/AGENTS.md" "$PROJECT/SYSTEM.md"
+# --- 1. AGENTS.md -------------------------------------------------------------
+
+copy_file "$DEV_DIR/AGENTS.md" "$PROJECT/AGENTS.md"
 
 # --- 2. harness agents symlink ------------------------------------------------
 
@@ -105,10 +110,11 @@ AGENT_DIRS=()
 [ "$HARNESS" = "claude" ] || [ "$HARNESS" = "both" ] && AGENT_DIRS+=(".claude/agents")
 for dir in "${AGENT_DIRS[@]}"; do
 	ensure_dir "$PROJECT/$(dirname "$dir")"
+	ensure_untracked_dir "$PROJECT/$(dirname "$dir")"
 	link_into "$DEV_DIR/agents" "$PROJECT/$dir"
 done
 
-# --- 3. the doc web (SYSTEM.md §3) --------------------------------------------
+# --- 3. the doc web (AGENTS.md §3) --------------------------------------------
 
 OPS="$PROJECT/docs/ops"
 ensure_dir "$OPS"
@@ -116,8 +122,8 @@ ensure_dir "$OPS"
 ensure_file "$OPS/BOARD.md" <<'EOF'
 # Board
 
-Line-items only; what belongs here is stated once in SYSTEM.md §2. Live state
-(what is running right now) lives in `docs/live/` — gitignored, invisible to
+Line-items only; what belongs here is stated once in AGENTS.md §2. Scrathpad state
+(what is running right now) lives in `docs/scratch/` — gitignored, invisible to
 lanes; a lane gets its context from its brief, not from here.
 
 Legend: 🚧 in flight · ✅ landed · ⏸ deferred.
@@ -137,7 +143,7 @@ ensure_file "$OPS/CHANGELOG.md" <<'EOF'
 # Changelog
 
 What got added, per landing — dated with a clock and the jj change id. The entry
-format is stated once in SYSTEM.md §2.
+format is stated once in AGENTS.md §2.
 
 ## Unreleased
 EOF
@@ -145,9 +151,9 @@ EOF
 ensure_file "$OPS/ISSUES.md" <<'EOF'
 # Issues
 
-A parking lot, not a queue — defects and rough edges noticed in passing; nothing
-here is scheduled until promoted onto the board. What belongs here is stated once
-in SYSTEM.md §2.
+> What belongs here, and what does not: @AGENTS.md §2.
+> 🐞 open · 🔬 triaged (cause known, fix specced) · 🔄 being fixed ·
+> ✅ fixed · 🗑️ won't fix / not a bug. Sizes: S ≈ a session · M ≈ a lane.
 
 | Status | Found | What | Verdict |
 |---|---|---|---|
@@ -157,28 +163,55 @@ ensure_file "$OPS/IDEAS.md" <<'EOF'
 # Ideas
 
 An inbox: raw, half-formed, uncommitted. An idea only ever moves down; ids are
-stable and never reused. What belongs here is stated once in SYSTEM.md §2.
+stable and never reused.
+
+> What belongs here, and what does not: @AGENTS.md §2.
+>
+> Status: 💡 open · 🔶 partly answered by something that shipped · 🎯 next up ·
+> 📋 specced and queued · 🔄 in flight · 🔬 being researched · ✅ shipped ·
+> 🗑️ answered by deciding not to.
 
 ## Inbox
+| Status | Added | # | Idea | Notes |
+|---|---|---|---|---|
 
 ## In-flight
+| Status | Added | # | Idea | Notes |
+|---|---|---|---|---|
 
 ## Done
+| Status | Added | # | Idea | Notes |
+|---|---|---|---|---|
 EOF
 
 ensure_file "$OPS/ROADMAP.md" <<'EOF'
 # Roadmap
 
-Horizons and versions, and what a version means in the register of the ones
-before it. Only what is not done — finished work is the changelog's. See
-SYSTEM.md §2.
+> What belongs here, and what does not: @AGENTS.md §2. 
+
+Each horizon is one **story line** from @docs/ops/IDEAS.md carried to a usable
+state, ordered so every phase makes the next cheaper. Phases are themes, not
+gates: a row can be pulled forward whenever it's wanted — say its `LABEL` if it
+is on the board, otherwise ask and it gets specced.
+
+> Status: 🔄 in flight · ⏸️ started then paused · 📋 specced & queued on
+> @docs/ops/BOARD.md · 🔶 partly shipped (the account is in the changelog; what
+> is left is in the row) · 🎯 next up · ⬜ open, not scheduled anyw
+
+| St | Size | Item | Ideas |
+|---|---|---|---|
 EOF
 
 ensure_file "$OPS/DECISIONS.md" <<'EOF'
 # Decisions
 
+ADR-lite: small-but-binding decisions with their rationale, newest first —
+things too small for a design doc but too important to live only in commit
+messages or conversation. Big designs stay in docs/design/; findings in
+docs/research/. One line of context each; link deeper docs where they exist.
+
 One row, one decision, one date — so a settled question stays settled. Carries
-both a clock and the jj change id (SYSTEM.md §2).
+both a clock and the jj change id (AGENTS.md §2).
 
 | When · change id | Decision | Rationale |
 |---|---|---|
@@ -189,40 +222,20 @@ for kind in design research guides reference archive; do
 	ensure_gitkeep "$PROJECT/docs/$kind"
 done
 
-# The live directory — gitignored, rewritten freely, invisible to lanes.
-ensure_dir "$PROJECT/docs/live"
-ensure_file "$PROJECT/docs/live/STATUS.md" <<'EOF'
-# Live status
-
-What is running, what is ready and unintegrated, where trunk is, what waits on
-the human. Gitignored (this whole directory is), so it can be rewritten at any
-time — including mid-integration — without dirtying the working copy. Invisible
-to lanes; a lane gets its context from its brief.
-EOF
-
-# Workspaces and screenshots.
-ensure_dir "$PROJECT/.workspaces"
-ensure_dir "$PROJECT/.screenshots/progress"
-
-# --- 4. gitignore -------------------------------------------------------------
-
-add_ignore "$PROJECT" "SYSTEM.md"
-add_ignore "$PROJECT" ".workspaces/"
-add_ignore "$PROJECT" ".screenshots/"
-add_ignore "$PROJECT" "docs/live/"
-for dir in "${AGENT_DIRS[@]}"; do
-	add_ignore "$PROJECT" "$dir"
-done
+# The scratch, workspaces and screenshots directories.
+ensure_untracked_dir "$PROJECT/docs/scratch"
+ensure_untracked_dir "$PROJECT/.workspaces"
+ensure_untracked_dir "$PROJECT/.screenshots"
 
 # --- report -------------------------------------------------------------------
 
 echo "Adopted simply/dev into $PROJECT (harness: $HARNESS)."
-echo "  SYSTEM.md -> $DEV_DIR/AGENTS.md"
+echo "  AGENTS.md -> $DEV_DIR/AGENTS.md"
 for dir in "${AGENT_DIRS[@]}"; do
 	echo "  $dir -> $DEV_DIR/agents"
 done
-echo "  docs/ops/, docs/{design,research,guides,reference,archive}/, docs/live/, $HUMAN_CHANNEL/"
-echo "  .workspaces/, .screenshots/progress/"
+echo "  docs/ops/, docs/{design,research,guides,reference,archive}/, docs/scratch/"
+echo "  .workspaces/, .screenshots/"
 if [ "$HARNESS" = "pi" ] || [ "$HARNESS" = "both" ]; then
 	echo
 	echo "Reminders for pi:"
@@ -230,5 +243,3 @@ if [ "$HARNESS" = "pi" ] || [ "$HARNESS" = "both" ]; then
 	echo "  - trust the project when pi prompts on next launch"
 fi
 echo
-echo "Next: give the project a root AGENTS.md that points at @SYSTEM.md and adds"
-echo "only what is true of that project (its gates, its paths)."
