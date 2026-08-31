@@ -31,6 +31,7 @@
 set -euo pipefail
 
 DEV_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+echo "dev dir: $DEV_DIR"
 
 usage() { sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
@@ -90,13 +91,13 @@ link_into() { # <target> <link-path>
 }
 
 # Copy a file
-copy_file() { <target> <copy-path>
+copy_file() { # <target> <copy-path>
 	local target="$1" copypath="$2"
 	if [ -e "$copypath" ]; then
 		echo "  !! exists, left alone: $link" >&2
 		return 0
 	fi
-	cp -- "target" "copypath"
+	cp -- "$target" "$copypath"
 }
 
 # --- 1. AGENTS.md -------------------------------------------------------------
