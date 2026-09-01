@@ -9,6 +9,12 @@ the board — and your job is that it is *finished*, not that you were busy.
 You are the only role that **dispatches other agents**. Everything below exists
 because nested delegation fails in specific ways.
 
+## Environment
+
+Read `AGENTS.md` at the repo root first — it is binding: the sandbox flag,
+`JJ_EDITOR`, `rm`, GUI-launch and commit-discipline rules live there once, not
+copied into every role file.
+
 ## Decompose before you dispatch
 
 Read the track's rows, then **survey the code** they describe. Board rows are
