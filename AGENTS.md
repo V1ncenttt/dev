@@ -284,9 +284,55 @@ Ideally only one or 2 key ones remain"*):
 
 Documentation lives in the docs tree, **never inside the source tree**.
 
+### A repo you don't own
+
+Everything above assumes the repo is yours to lay this system out inside. A
+shared work repo — reviewed by people who never opted into any of this — gets
+a second adoption mode, not a variant of the first one.
+
+**Two repos, sibling, not nested.**
+
+    ~/work/<project>/
+      repo/           the shared repo — git, PR'd, reviewed, untouched by this system
+      ops/            a separate jj repo — AGENTS.md, docs/ops/, agents/, all of it
+
+`repo/` never contains a line of this system — not `AGENTS.md`, not
+`BOARD.md`, not a gitignore entry, nothing a teammate's `git status`, PR diff,
+or repo search would ever surface. `ops/` is the same doc web this file
+describes everywhere else, laid out per §3, just pointed at a different remote
+(or none) than the code it tracks.
+
+**Why sibling and not nested inside `repo/`.** Nesting only works when the
+nested thing is *another working copy of the same repo* — a git worktree or a
+jj workspace, which the repo's own git/jj already understands and which
+carries no history of its own. `repo/.worktrees/<lane>/` (or
+`repo/.claude/.worktrees/`) is exactly that, and belongs inside, per §3's rule
+below. A second, independent repo with its own object store is a different
+kind of thing: git can mistake it for an embedded repo and gitlink it into a
+commit, and the only thing keeping it invisible to the shared remote would be
+a per-clone `.git/info/exclude` entry that a re-clone silently drops. A
+sibling directory needs no such entry to be safe — nothing that operates on
+`repo/`'s tree can ever reach a path that isn't inside it, structurally, not
+by discipline.
+
+**What still lands in `repo/`**: code, its tests, and a real `CHANGELOG.md` if
+the team already keeps one by convention — check first, don't assume. Nothing
+else from this file's doc web belongs there.
+
+**Landing changes shape.** A lane's last act is still the same
+rebase-and-report as always, but landing means opening a PR against `repo/`
+that passes the gates clean, not moving anyone else's trunk — the `ops/`
+board's landed index records the PR link or merge commit in place of a
+bookmark move. Review is the team's gate, not the integrator's.
+
+**Once more than one lane runs against the shared repo at a time**, give
+`ops/` its own `.workspaces/<lane>/` too — same convention as `repo/`'s, for
+the same reason: without it, concurrent lanes writing board rows share one
+working copy of a repo built to avoid exactly that collision.
+
 ---
 
-## 3. Default directory structure
+## 3. Default directory structure (a repo you own)
 
     AGENTS.md                  points at this file, then this project's own facts
     .claude/agents ->          symlink to ~/projects/simply/dev/agents
@@ -306,7 +352,10 @@ Documentation lives in the docs tree, **never inside the source tree**.
       baseline/<date>/         the full set after an integration; keeps everything
 
 Workspaces go **inside** the repo, not `../` siblings — siblings pollute the
-directory the other repos live in.
+directory the other repos live in. This is about extra working copies of *this*
+repo (git worktrees, jj workspaces); a separate repo with its own history —
+the `ops/` sibling for a repo you don't own — is a different kind of thing and
+is a sibling on purpose. See *A repo you don't own* above.
 
 ---
 

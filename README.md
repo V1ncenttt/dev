@@ -38,6 +38,15 @@ per-role tool restrictions are set by the harness config, not the role files.
 
 Lay the project out per the default structure in §3.
 
+## A repo you don't own
+
+For a shared repo you don't control (a work repo, reviewed by people who never
+opted into any of this), don't run the installer inside it. Run it into a
+sibling `ops/` directory instead, next to a plain clone of the shared repo —
+see *A repo you don't own* in [AGENTS.md](AGENTS.md) §2. Nothing of this
+system ever enters the shared repo except code, its tests, and a `CHANGELOG.md`
+if the team already keeps one.
+
 ## Layout
 
     AGENTS.md     the system: roles, the doc web, the directory structure, the rules
