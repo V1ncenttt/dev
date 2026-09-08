@@ -330,6 +330,36 @@ bookmark move. Review is the team's gate, not the integrator's.
 the same reason: without it, concurrent lanes writing board rows share one
 working copy of a repo built to avoid exactly that collision.
 
+### How a lane writes into shared documents
+
+- A lane writes `<ops>/changelog.d/<LANE>.md` and
+  `<ops>/issues.d/<LANE>.md` (rows plus `close I-nnn:` lines) and flips its
+  own the board row. It never edits the changelog or the issue list directly;
+  the integrator folds and deletes the fragments.
+- **the changelog is user-facing** — what a person gets, not what the code
+  did. For internal work the honest line is *"nothing changes for you; this is
+  what stops a class of bug reaching you."*
+- **An the issue list row says what is wrong before anything else.** A repair
+  history is one clause at the end, never the opening.
+- **A design document needs its human's review before a commit changes it.** A lane reports the correction; it does not make it.
+- **Fix it, do not file it.** A small defect found in passing is closed in the
+  lane. Chris, 2026-09-07: *"I hate that issues keep piling up instead of getting resolved."*
+
+**Why fragments rather than direct edits.** Two lanes editing one changelog is
+a merge conflict in prose, which a resolver settles by picking a side rather
+than by understanding either. A fragment per lane cannot collide; the
+integrator folds them **in landing order**, which is the only order that reads
+correctly, and deletes them. The cost is one step that must not be skipped:
+**a fragment that survives its fold gets applied twice.** Retire it in the same
+commit that folds it, or the next fold reads it as unlanded work.
+
+**The one exception, and it must be explicit.** Anything a lane needs to
+*reserve* — an issue id, a name — cannot live in a fragment, because a lane
+cannot read another lane's. Reservations go in a table inside the shared file
+itself, and that table is the one part of it a lane edits directly. Keep it
+out of any gitignored file: a lane cannot read what is not committed, which is
+how five lanes once picked the same id.
+
 ---
 
 ## 3. Default directory structure (a repo you own)
