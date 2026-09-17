@@ -6,12 +6,17 @@
 # overwritten):
 #
 #   1. copies AGENTS.md        -> this repo's AGENTS.md
-#   2. symlinks the role definitions into the directory the coding harness
-#      in use reads them from:
+#   2. wires the role definitions into the directory the coding harness in use
+#      reads them from:
 #        pi.dev       .pi/agents       (personas; needs projectPersonas: true
 #                                       in ~/.pi/agent/subagents.json and a
 #                                       trusted project)
-#        Claude Code  .claude/agents   (subagents)
+#        Claude Code  .claude/agents   (subagents; symlinked)
+#        Mistral vibe .vibe/agents/*.toml + .vibe/prompts/*.md
+#                                     (vibe splits each role into a TOML
+#                                      profile naming a system_prompt_id, and a
+#                                      prompt .md holding the persona body —
+#                                      both generated from agents/*.md)
 #   3. lays out the doc web per AGENTS.md §3:
 #        docs/ops/        BOARD CHANGELOG ISSUES IDEAS ROADMAP DECISIONS
 #        docs/{design,research,guides,reference,archive}/  (.gitkeep)
@@ -19,13 +24,16 @@
 #        .workspaces/  .screenshots/
 #   4. appends the gitignore entries the above need, to the project's
 #      .gitignore (created if absent). The symlink targets are machine-specific
-#      absolute paths, so they must never be committed.
+#      absolute paths, so they must never be committed. The vibe-generated
+#      files are derived from agents/*.md and gitignored the same way; re-run
+#      the installer to refresh them after editing a role.
 #
 # Usage:
-#   ./adopt.sh <project-dir> [--harness pi|claude|both|auto]
+#   ./adopt.sh <project-dir> [--harness pi|claude|vibe|both|all|auto]
+#                 (a comma list is also accepted, e.g. --harness claude,vibe)
 #
 #   --harness          which harness directory(s) to wire (default: auto —
-#                      .claude if the project has one, else .pi)
+#                      .vibe if the project has one, then .claude, else .pi)
 
 #
 set -euo pipefail
@@ -33,7 +41,7 @@ set -euo pipefail
 DEV_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "dev dir: $DEV_DIR"
 
-usage() { sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '2,44p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
 PROJECT=""
 HARNESS="auto"
@@ -52,15 +60,27 @@ done
 [ -d "$PROJECT" ] || { echo "not a directory: $PROJECT" >&2; exit 1; }
 PROJECT="$(cd "$PROJECT" && pwd)"
 
-# Resolve the harness: explicit flag wins; auto picks .claude if the project
-# already has one, else .pi.
+# Resolve the harness: explicit flag wins (a comma list is accepted, e.g.
+# "claude,vibe"). "auto" wires .vibe if present, then .claude, else .pi.
 if [ "$HARNESS" = "auto" ]; then
-	if [ -d "$PROJECT/.claude" ]; then HARNESS="claude"; else HARNESS="pi"; fi
+	if [ -d "$PROJECT/.vibe" ]; then HARNESS="vibe"
+	elif [ -d "$PROJECT/.claude" ]; then HARNESS="claude"
+	else HARNESS="pi"; fi
 fi
 case "$HARNESS" in
-	pi|claude|both) ;;
-	*) echo "--harness must be pi, claude, both or auto (got: $HARNESS)" >&2; exit 1 ;;
+	both) HARNESS="pi,claude" ;;
+	all)  HARNESS="pi,claude,vibe" ;;
 esac
+# Normalise into the space-separated ACTIVE set, validating each token.
+ACTIVE=""
+IFS=',' read -ra _tokens <<<"$HARNESS"
+for _t in "${_tokens[@]}"; do
+	case "$_t" in
+		pi|claude|vibe) ACTIVE="$ACTIVE $_t" ;;
+		*) echo "--harness must be pi, claude, vibe, both, all, or a comma list (got: $_t)" >&2; exit 1 ;;
+	esac
+done
+ACTIVE="${ACTIVE# }"
 
 # --- helpers -----------------------------------------------------------------
 
@@ -94,26 +114,101 @@ link_into() { # <target> <link-path>
 copy_file() { # <target> <copy-path>
 	local target="$1" copypath="$2"
 	if [ -e "$copypath" ]; then
-		echo "  !! exists, left alone: $link" >&2
+		echo "  !! exists, left alone: $copypath" >&2
 		return 0
 	fi
 	cp -- "$target" "$copypath"
+}
+
+# Is a given harness in the ACTIVE set? (membership test for comma lists)
+has_h() { # <token>
+	case " $ACTIVE " in *" $1 "*) return 0 ;; *) return 1 ;; esac
+}
+
+# Generate the vibe harness files from agents/*.md: one TOML profile per role
+# in .vibe/agents/ and one persona .md in .vibe/prompts/. Unlike the symlinks
+# above these are derived files, so they are rewritten on every run (re-run
+# adopt.sh after editing a role to refresh them). Requires python3.
+generate_vibe_agents() { # <project-dir>
+	local project="$1"
+	if ! command -v python3 >/dev/null 2>&1; then
+		echo "  !! python3 not found; skipped vibe generation" >&2
+		return 0
+	fi
+	python3 - "$DEV_DIR" "$project" <<'PYEOF'
+import sys, pathlib
+
+dev, project = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
+src = dev / "agents"
+out_agents = project / ".vibe" / "agents"
+out_prompts = project / ".vibe" / "prompts"
+out_agents.mkdir(parents=True, exist_ok=True)
+out_prompts.mkdir(parents=True, exist_ok=True)
+
+def toml_s(s):
+    return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+def split_frontmatter(text):
+    # A leading "---\n" ... "---\n" block; body is everything after.
+    if text.startswith("---\n"):
+        parts = text.split("---\n", 2)
+        if len(parts) == 3:
+            return parts[1], parts[2]
+    if text.startswith("---\r\n"):
+        parts = text.split("---\r\n", 2)
+        if len(parts) == 3:
+            return parts[1], parts[2]
+    return "", text
+
+for md in sorted(src.glob("*.md")):
+    meta = {}
+    fm, body = split_frontmatter(md.read_text(encoding="utf-8"))
+    for line in fm.splitlines():
+        if ":" in line:
+            k, v = line.split(":", 1)
+            meta[k.strip()] = v.strip()
+    name = meta.get("name", md.stem)
+    desc = meta.get("description", "")
+    display = name.replace("-", " ").replace("_", " ").title()
+    toml = (
+        f"# Generated by adopt.sh from agents/{name}.md — do not edit by hand;\n"
+        f"# edit the role and re-run adopt.sh.\n"
+        f"display_name = {toml_s(display)}\n"
+        f"description = {toml_s(desc)}\n"
+        f'safety = "neutral"\n'
+        f'agent_type = "subagent"\n'
+        f"# flip to \"agent\" to run this role with `vibe --agent {name}`\n"
+        f"system_prompt_id = {toml_s(name)}\n"
+    )
+    (out_agents / f"{name}.toml").write_text(toml, encoding="utf-8")
+    (out_prompts / f"{name}.md").write_text(body.lstrip("\n"), encoding="utf-8")
+    print(f"  .vibe/agents/{name}.toml + .vibe/prompts/{name}.md")
+PYEOF
 }
 
 # --- 1. AGENTS.md -------------------------------------------------------------
 
 copy_file "$DEV_DIR/AGENTS.md" "$PROJECT/AGENTS.md"
 
-# --- 2. harness agents symlink ------------------------------------------------
+# --- 2. harness agents wiring ------------------------------------------------
 
+# pi and Claude Code read role files directly, so a symlink into the harness's
+# agents directory is enough. vibe splits each role into a TOML profile and a
+# separate prompt .md, so those are generated instead.
 AGENT_DIRS=()
-[ "$HARNESS" = "pi" ] || [ "$HARNESS" = "both" ] && AGENT_DIRS+=(".pi/agents")
-[ "$HARNESS" = "claude" ] || [ "$HARNESS" = "both" ] && AGENT_DIRS+=(".claude/agents")
-for dir in "${AGENT_DIRS[@]}"; do
+has_h pi     && AGENT_DIRS+=(".pi/agents")
+has_h claude && AGENT_DIRS+=(".claude/agents")
+for dir in "${AGENT_DIRS[@]+"${AGENT_DIRS[@]}"}"; do
 	ensure_dir "$PROJECT/$(dirname "$dir")"
 	ensure_untracked_dir "$PROJECT/$(dirname "$dir")"
 	link_into "$DEV_DIR/agents" "$PROJECT/$dir"
 done
+if has_h vibe; then
+	ensure_dir "$PROJECT/.vibe"
+	ensure_untracked_dir "$PROJECT/.vibe/agents"
+	ensure_untracked_dir "$PROJECT/.vibe/prompts"
+	generate_vibe_agents "$PROJECT"
+fi
 
 # --- 3. the doc web (AGENTS.md §3) --------------------------------------------
 
@@ -230,17 +325,25 @@ ensure_untracked_dir "$PROJECT/.screenshots"
 
 # --- report -------------------------------------------------------------------
 
-echo "Adopted simply/dev into $PROJECT (harness: $HARNESS)."
+echo "Adopted simply/dev into $PROJECT (harness: $ACTIVE)."
 echo "  AGENTS.md -> $DEV_DIR/AGENTS.md"
-for dir in "${AGENT_DIRS[@]}"; do
+for dir in "${AGENT_DIRS[@]+"${AGENT_DIRS[@]}"}"; do
 	echo "  $dir -> $DEV_DIR/agents"
 done
 echo "  docs/ops/, docs/{design,research,guides,reference,archive}/, docs/scratch/"
 echo "  .workspaces/, .screenshots/"
-if [ "$HARNESS" = "pi" ] || [ "$HARNESS" = "both" ]; then
+if has_h pi; then
 	echo
 	echo "Reminders for pi:"
 	echo "  - set \"projectPersonas\": true in ~/.pi/agent/subagents.json"
 	echo "  - trust the project when pi prompts on next launch"
+fi
+if has_h vibe; then
+	echo
+	echo "Reminders for vibe:"
+	echo "  - trust the project when vibe prompts on first launch"
+	echo "  - roles are subagents; dispatch them via the task tool, or flip"
+	echo "    agent_type to \"agent\" in .vibe/agents/<role>.toml to run a role"
+	echo "    as the primary agent with: vibe --agent <role>"
 fi
 echo

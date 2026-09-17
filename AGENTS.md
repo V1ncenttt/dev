@@ -3,8 +3,15 @@
 A reusable way of running agent work on a repo. Nothing here is specific to one
 project. A project adopts it with `adopt.sh` (idempotent: symlinks, doc-web
 skeleton, gitignore entries) or by hand — the role definitions go in the
-directory the coding harness in use reads them from (Claude Code:
-`.claude/agents`; pi.dev: `.pi/agents`):
+directory the coding harness in use reads them from:
+
+  - **Claude Code** — `.claude/agents/*.md` (symlinked; one file per role,
+    frontmatter + persona body).
+  - **pi.dev** — `.pi/agents` (personas; same role files, symlinked).
+  - **Mistral vibe** — `.vibe/agents/*.toml` + `.vibe/prompts/*.md`. Vibe splits
+    each role into a TOML profile (which names a `system_prompt_id`) and a
+    separate prompt `.md` holding the persona body. `adopt.sh` generates both
+    from the canonical `agents/*.md`; re-run it after editing a role.
 
     # either: ./adopt.sh <project>
 
@@ -366,7 +373,9 @@ how five lanes once picked the same id.
 
     AGENTS.md                  points at this file, then this project's own facts
     .claude/agents ->          symlink to ~/projects/simply/dev/agents
-                               (Claude Code; pi.dev uses .pi/agents instead)
+                               (Claude Code; pi.dev uses .pi/agents instead;
+                                Mistral vibe uses generated .vibe/agents/*.toml
+                                + .vibe/prompts/*.md)
     docs/
       ops/                     BOARD.md CHANGELOG.md ISSUES.md IDEAS.md
                                ROADMAP.md DECISIONS.md

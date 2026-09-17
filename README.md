@@ -19,22 +19,33 @@ copies `AGENTS.md` and symlinks the role definitions, lays out the doc web of §
 
 **The role definitions go in the directory your coding harness reads them
 from — pick the one that matches the harness.** The script auto-detects
-(`--harness pi|claude|both` to override):
+(`--harness pi|claude|vibe|both|all` to override, or a comma list like
+`--harness claude,vibe`):
 
-    # Claude Code — agents from .claude/agents
+    # Claude Code — agents from .claude/agents  (symlinked)
     # pi.dev — personas from .pi/agents
     #   (also needs `projectPersonas: true` in ~/.pi/agent/subagents.json,
     #    and the project must be trusted — pi prompts on launch)
+    # Mistral vibe — .vibe/agents/*.toml + .vibe/prompts/*.md
+    #   (vibe splits each role into a TOML profile naming a system_prompt_id
+    #    and a separate prompt .md with the persona body; adopt.sh generates
+    #    both from agents/*.md, and the project must be trusted — vibe prompts
+    #    on first launch. Re-run adopt.sh after editing a role to refresh them.)
 
 The links' targets are absolute machine-specific paths, so they are gitignored;
-the project's own `AGENTS.md` records the commands that recreate them (a fresh
+the vibe-generated files are derived the same way and gitignored too. The
+project's own `AGENTS.md` records the commands that recreate them (a fresh
 clone runs the installer again).
 
-The role files are shared verbatim between harnesses, so their frontmatter must
-stay valid for every harness that reads them: **omit `tools`** (both harnesses
-then allow all tools — Claude Code by inheritance, pi because it has no
-allow-all token and treats a `tools:` list as literal names). Per-model or
-per-role tool restrictions are set by the harness config, not the role files.
+The role files are shared verbatim between harnesses that read them directly
+(Claude Code, pi.dev), so their frontmatter must stay valid for every harness
+that reads them: **omit `tools`** (both harnesses then allow all tools —
+Claude Code by inheritance, pi because it has no allow-all token and treats a
+`tools:` list as literal names). Vibe does not read the `.md` directly — it
+gets the persona from the generated prompt and tool/model settings from the
+generated TOML — so the canonical role files stay the single source of truth.
+Per-model or per-role tool restrictions are set by the harness config, not the
+role files.
 
 Lay the project out per the default structure in §3.
 
@@ -52,7 +63,9 @@ if the team already keeps one.
     AGENTS.md     the system: roles, the doc web, the directory structure, the rules
     adopt.sh      the installer: symlinks + doc-web skeleton + gitignore, idempotent
     agents/       the eight role definitions, symlinked into each project
-                  (.claude/agents for Claude Code, .pi/agents for pi.dev)
+                  (.claude/agents for Claude Code, .pi/agents for pi.dev;
+                   for Mistral vibe, generated into .vibe/agents/*.toml and
+                   .vibe/prompts/*.md)
 
 ## The eight roles
 
