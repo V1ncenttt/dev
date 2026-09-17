@@ -1,5 +1,10 @@
 # simply/dev
 
+> **Fork of [poucet/dev](https://github.com/poucet/dev).** This branch (`vibe-claude`)
+> adds Mistral **vibe** as a first-class harness alongside Claude Code and pi.dev.
+> Upstream remains the source of truth; this fork exists to carry the vibe wiring
+> until it lands (or stays here if it doesn't).
+
 A reusable way of running agent work on a repo — roles, the documents they share,
 and the rules that keep them from stepping on each other.
 
